@@ -23,6 +23,8 @@
 				errorTemplate: '<div class="error"></div>',
 				successTemplate: '<div class="success"></div>'
 			},
+			languageCode: 'en',
+			i18n: undefined,
 			beforeSubmit: undefined,
 			collectFormData: undefined,
 			generateSubscribeUrl: undefined
@@ -104,13 +106,19 @@
 					// sometimes response.msg will have the format 'NUMBER - MESSAGE',
 					// but the number is not relevant to the user, so we strip it
 					var responseMessageParts = response.msg.split( ' - ', 2 );
+					var responseMessage = '';
 
 					if ( typeof responseMessageParts[1] === 'undefined' ) {
-						$response.html( response.msg );
+						responseMessage = response.msg;
 					} else {
-						$response.html( responseMessageParts[1] );
+						responseMessage = responseMessageParts[1];
 					}
 
+					if ( $.isFunction( widget.options.i18n ) ) {
+						responseMessage = widget.options.i18n.apply( widget, [ responseMessage, widget.options.languageCode ] );
+					}
+
+					$response.html( responseMessage );
 					widget.options.response.$wrapper.stop().append( $response ).slideDown();
 				}
 			} ).always( function() {
