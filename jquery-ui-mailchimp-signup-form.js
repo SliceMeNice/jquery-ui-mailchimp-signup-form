@@ -61,49 +61,61 @@
 				} );
 			}
 
-			if ( email && email.length ) {
-				var subscribeUrl = '//' + widget.options.mailchimp.username + '.' + widget.options.mailchimp.dc + '.list-manage.com/subscribe/post-json';
+			var subscribeUrl = '//' + widget.options.mailchimp.username + '.' + widget.options.mailchimp.dc + '.list-manage.com/subscribe/post-json';
 
-				if ( widget.options.generateSubscribeUrl ) {
-					subscribeUrl = widget.options.generateSubscribeUrl.apply( widget );
-				}
-
-				var formData = {
-					EMAIL: email,
-					u: widget.options.mailchimp.u,
-					id: widget.options.mailchimp.id
-				};
-
-				if ( $.isFunction( widget.options.collectFormData ) ) {
-					formData = widget.options.collectFormData.apply( widget, [ formData ] );
-				}
-
-				$.ajax( {
-					url: subscribeUrl,
-					data: formData,
-					dataType: 'jsonp',
-					jsonp: 'c'
-				} ).done( function( response ) {
-					if ( response ) {
-						var $response;
-
-						switch ( response.result ) {
-							case 'error':
-								$response = $( widget.options.response.errorTemplate );
-								break;
-
-							case 'success':
-								$response = $( widget.options.response.successTemplate );
-								break;
-						}
-
-						$response.html( response.msg );
-						widget.options.response.$wrapper.stop().append( $response ).slideDown();
-					}
-				} ).always( function() {
-					widget.isWaitingForResponse = false;
-				} );
+			if ( widget.options.generateSubscribeUrl ) {
+				subscribeUrl = widget.options.generateSubscribeUrl.apply( widget );
 			}
+
+			var formData = {
+				u: widget.options.mailchimp.u,
+				id: widget.options.mailchimp.id
+			};
+
+			var formDataArray = widget.element.serializeArray();
+
+			$.each( formDataArray, function( index, item ) {
+				formData[ item.name ] = item.value;
+			} );
+
+			if ( $.isFunction( widget.options.collectFormData ) ) {
+				formData = widget.options.collectFormData.apply( widget, [ formData ] );
+			}
+
+			$.ajax( {
+				url: subscribeUrl,
+				data: formData,
+				dataType: 'jsonp',
+				jsonp: 'c'
+			} ).done( function( response ) {
+				if ( response ) {
+					var $response;
+
+					switch ( response.result ) {
+						case 'error':
+							$response = $( widget.options.response.errorTemplate );
+							break;
+
+						case 'success':
+							$response = $( widget.options.response.successTemplate );
+							break;
+					}
+
+					// sometimes response.msg will have the format 'NUMBER - MESSAGE',
+					// but the number is not relevant to the user, so we strip it
+					var responseMessageParts = response.msg.split( ' - ', 2 );
+
+					if ( typeof responseMessageParts[1] === 'undefined' ) {
+						$response.html( response.msg );
+					} else {
+						$response.html( responseMessageParts[1] );
+					}
+
+					widget.options.response.$wrapper.stop().append( $response ).slideDown();
+				}
+			} ).always( function() {
+				widget.isWaitingForResponse = false;
+			} );
 		},
 
 		_destroy: function() {
