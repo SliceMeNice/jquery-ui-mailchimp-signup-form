@@ -103,16 +103,7 @@
 							break;
 					}
 
-					// sometimes response.msg will have the format 'NUMBER - MESSAGE',
-					// but the number is not relevant to the user, so we strip it
-					var responseMessageParts = response.msg.split( ' - ', 2 );
-					var responseMessage = '';
-
-					if ( typeof responseMessageParts[1] === 'undefined' ) {
-						responseMessage = response.msg;
-					} else {
-						responseMessage = responseMessageParts[1];
-					}
+					var responseMessage = response.msg;
 
 					if ( $.isFunction( widget.options.i18n ) ) {
 						responseMessage = widget.options.i18n.apply( widget, [ responseMessage, widget.options.languageCode ] );
