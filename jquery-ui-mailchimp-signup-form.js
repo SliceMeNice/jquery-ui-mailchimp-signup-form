@@ -20,8 +20,8 @@
 			$emailInput: undefined,
 			response: {
 				$wrapper: undefined,
-				errorTemplate: '<div class="error"></div>',
-				successTemplate: '<div class="success"></div>'
+				buildErrorMessageElement: undefined,
+				buildSuccessMessageElement: undefined
 			},
 			languageCode: 'en',
 			i18n: undefined,
@@ -93,24 +93,27 @@
 				if ( response ) {
 					var $response;
 
-					switch ( response.result ) {
-						case 'error':
-							$response = $( widget.options.response.errorTemplate );
-							break;
-
-						case 'success':
-							$response = $( widget.options.response.successTemplate );
-							break;
-					}
-
 					var responseMessage = response.msg;
 
 					if ( $.isFunction( widget.options.i18n ) ) {
 						responseMessage = widget.options.i18n.apply( widget, [ responseMessage, widget.options.languageCode ] );
 					}
 
-					$response.html( responseMessage );
-					widget.options.response.$wrapper.stop().append( $response ).slideDown();
+					switch ( response.result ) {
+						case 'error':
+							$response = widget.options.response.buildErrorMessageElement( responseMessage );
+							break;
+
+						case 'success':
+							$response = widget.options.response.buildSuccessMessageElement( responseMessage );
+							break;
+					}
+
+					if ( $.isFunction( widget.options.response.appendResponse ) ) {
+						widget.options.response.appendResponse.apply( widget, [ $response ] );
+					} else {
+						widget.options.response.$wrapper.stop().append( $response ).slideDown();
+					}
 				}
 			} ).always( function() {
 				widget.isWaitingForResponse = false;
